@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Interview Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linux:  #E8500A;
+    --git:    #C0392B;
+    --docker: #0D7FBF;
+    --k8s:    #2E6FD8;
+    --bg:     #0C0C10;
+    --surface:#13131A;
+    --card:   #1A1A24;
+    --border: rgba(255,255,255,0.07);
+    --text:   #F0EDE8;
+    --muted:  #7A7885;
+    --accent: #F5C842;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1rem 4rem;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.5;
+  }
+
+  /* Header */
+  header {
+    width: 100%; max-width: 860px;
+    padding: 2.5rem 0 1.5rem;
+    position: relative; z-index: 1;
+  }
+
+  .header-top {
+    display: flex; align-items: baseline; gap: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .logo-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    padding: 2px 8px; border-radius: 3px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  h1 span { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+  }
+
+  /* Category Filter */
+  .filter-bar {
+    width: 100%; max-width: 860px;
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 1.8rem;
+    position: relative; z-index: 1;
+  }
+
+  .filter-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem; font-weight: 600;
+    padding: 0.4rem 1rem; border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  .filter-btn.active {
+    color: #000;
+    border-color: transparent;
+  }
+
+  .filter-btn[data-cat="all"].active   { background: var(--text); color: #000; }
+  .filter-btn[data-cat="linux"].active { background: var(--linux); }
+  .filter-btn[data-cat="git"].active   { background: var(--git); }
+  .filter-btn[data-cat="docker"].active{ background: var(--docker); }
+  .filter-btn[data-cat="k8s"].active   { background: var(--k8s); }
+
+  /* Stats bar */
+  .stats-bar {
+    width: 100%; max-width: 860px;
+    display: flex; gap: 1.5rem; align-items: center;
+    margin-bottom: 1.5rem;
+    position: relative; z-index: 1;
+  }
+
+  .stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem; color: var(--muted);
+  }
+
+  .stat strong { color: var(--text); font-weight: 500; }
+
+  .progress-wrap {
+    flex: 1; height: 3px;
+    background: var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%; width: 0%;
+    background: var(--accent);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex; gap: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem; color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px;
+    margin-left: auto;
+  }
+
+  .mode-btn {
+    padding: 4px 12px; border-radius: 100px;
+    cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border: none; background: none;
+    font-family: inherit; font-size: inherit;
+    color: var(--muted);
+  }
+
+  .mode-btn.active { background: var(--card); color: var(--text); }
+
+  /* Cards Grid */
+  .cards-grid {
+    width: 100%; max-width: 860px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1rem;
+    position: relative; z-index: 1;
+  }
+
+  /* Single card mode */
+  .cards-grid.single-mode {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+  }
+
+  .cards-grid.single-mode .flash-card {
+    min-height: 280px;
+  }
+
+  /* Flash Card */
+  .flash-card {
+    perspective: 1200px;
+    cursor: pointer;
+    min-height: 200px;
+  }
+
+  .flash-card.hidden { display: none; }
+
+  .card-inner {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+    border-radius: 16px;
+    min-height: 200px;
+  }
+
+  .flash-card.flipped .card-inner { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    display: flex; flex-direction: column;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .card-front {
+    background: var(--card);
+  }
+
+  .card-back {
+    background: var(--surface);
+    transform: rotateY(180deg);
+  }
+
+  /* Card category stripe */
+  .card-face::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; border-radius: 16px 16px 0 0;
+  }
+
+  .flash-card[data-cat="linux"]  .card-face::before { background: var(--linux); }
+  .flash-card[data-cat="git"]    .card-face::before { background: var(--git); }
+  .flash-card[data-cat="docker"] .card-face::before { background: var(--docker); }
+  .flash-card[data-cat="k8s"]    .card-face::before { background: var(--k8s); }
+
+  /* Subtle glow on hover by category */
+  .flash-card[data-cat="linux"]:hover  .card-inner { box-shadow: 0 0 0 1px var(--linux), 0 8px 40px rgba(232,80,10,0.12); }
+  .flash-card[data-cat="git"]:hover    .card-inner { box-shadow: 0 0 0 1px var(--git),   0 8px 40px rgba(192,57,43,0.12); }
+  .flash-card[data-cat="docker"]:hover .card-inner { box-shadow: 0 0 0 1px var(--docker),0 8px 40px rgba(13,127,191,0.12); }
+  .flash-card[data-cat="k8s"]:hover    .card-inner { box-shadow: 0 0 0 1px var(--k8s),  0 8px 40px rgba(46,111,216,0.12); }
+
+  .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 0.9rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .flash-card[data-cat="linux"]  .card-tag { color: var(--linux); }
+  .flash-card[data-cat="git"]    .card-tag { color: var(--git); }
+  .flash-card[data-cat="docker"] .card-tag { color: var(--docker); }
+  .flash-card[data-cat="k8s"]    .card-tag { color: var(--k8s); }
+
+  .card-tag .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor;
+  }
+
+  .card-q {
+    font-size: 1.02rem; font-weight: 600;
+    line-height: 1.45;
+    flex: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .card-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; color: var(--muted);
+    margin-top: 1rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+
+  .card-hint svg { opacity: 0.5; }
+
+  .card-a {
+    font-size: 0.88rem; line-height: 1.65;
+    color: #D8D4CE;
+    flex: 1;
+  }
+
+  .card-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8em;
+    background: rgba(255,255,255,0.08);
+    padding: 1px 6px; border-radius: 4px;
+    color: var(--accent);
+  }
+
+  .card-a strong { color: var(--text); font-weight: 600; }
+
+  .card-back-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem; color: var(--muted);
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+
+  /* Difficulty dots */
+  .difficulty {
+    display: flex; gap: 3px; margin-top: 0.9rem;
+    align-items: center;
+  }
+
+  .diff-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+
+  .diff-dot.filled { background: var(--accent); }
+  .diff-dot.empty  { background: rgba(255,255,255,0.12); }
+
+  .diff-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem; color: var(--muted);
+    margin-left: 0.4rem; letter-spacing: 0.05em;
+  }
+
+  /* Keyboard nav hint */
+  .kb-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; color: var(--muted);
+    text-align: center;
+    margin-top: 2rem;
+    position: relative; z-index: 1;
+    opacity: 0.6;
+  }
+
+  .kb-hint kbd {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 7px; border-radius: 4px;
+    font-family: inherit; font-size: inherit;
+  }
+
+  /* Shuffle btn */
+  .action-bar {
+    width: 100%; max-width: 860px;
+    display: flex; gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    position: relative; z-index: 1;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem; font-weight: 600;
+    padding: 0.5rem 1.2rem; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+
+  .action-btn:hover { border-color: rgba(255,255,255,0.2); background: var(--card); }
+
+  .action-btn.primary {
+    background: var(--accent); color: #000;
+    border-color: transparent;
+  }
+
+  .action-btn.primary:hover { opacity: 0.9; }
+
+  /* Count badge */
+  .count-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; color: var(--muted);
+    margin-left: auto;
+    align-self: center;
+  }
+
+  /* Entry animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .flash-card {
+    animation: fadeUp 0.35s ease both;
+  }
+
+  /* Single card navigation */
+  .nav-controls {
+    display: none;
+    width: 100%; max-width: 600px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.2rem;
+    position: relative; z-index: 1;
+  }
+
+  .nav-controls.visible { display: flex; }
+
+  .nav-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem; font-weight: 700;
+    padding: 0.6rem 1.5rem; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-btn:hover { border-color: rgba(255,255,255,0.25); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .nav-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; color: var(--muted);
+  }
+
+  /* Mastered overlay */
+  .flash-card.mastered .card-inner {
+    opacity: 0.4;
+  }
+
+  .master-btn {
+    position: absolute; bottom: 1rem; right: 1rem;
+    background: none; border: none;
+    font-size: 1.1rem; cursor: pointer;
+    opacity: 0.3; transition: opacity 0.2s;
+    z-index: 10;
+  }
+
+  .master-btn:hover { opacity: 0.8; }
+  .flash-card.mastered .master-btn { opacity: 0.9; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <span class="logo-mark">DevOps Pro</span>
+  </div>
+  <h1>Interview <span>Flashcards</span></h1>
+  <p class="subtitle">// Linux · Git · Docker · Kubernetes — click any card to reveal the answer</p>
+</header>
+
+<div class="filter-bar" id="filterBar">
+  <button class="filter-btn active" data-cat="all">All</button>
+  <button class="filter-btn" data-cat="linux">🐧 Linux</button>
+  <button class="filter-btn" data-cat="git">🌿 Git</button>
+  <button class="filter-btn" data-cat="docker">🐳 Docker</button>
+  <button class="filter-btn" data-cat="k8s">☸ Kubernetes</button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat">Showing <strong id="visibleCount">0</strong> cards</div>
+  <div class="stat">Mastered <strong id="masteredCount">0</strong></div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeGrid" onclick="setMode('grid')">Grid</button>
+    <button class="mode-btn"        id="modeSingle" onclick="setMode('single')">Study</button>
+  </div>
+</div>
+
+<div class="action-bar">
+  <button class="action-btn primary" onclick="shuffleCards()">⇄ Shuffle</button>
+  <button class="action-btn" onclick="flipAllOpen()">↓ Reveal All</button>
+  <button class="action-btn" onclick="resetAll()">↺ Reset</button>
+  <span class="count-badge" id="totalBadge">80 cards</span>
+</div>
+
+<div class="cards-grid" id="cardsGrid"></div>
+
+<div class="nav-controls" id="navControls">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Prev</button>
+  <span class="nav-counter" id="navCounter">1 / 1</span>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+</div>
+
+<p class="kb-hint"><kbd>Space</kbd> flip · <kbd>←</kbd><kbd>→</kbd> navigate · <kbd>M</kbd> master</p>
+
+<script>
+const CARDS = [
+  // ── LINUX ──────────────────────────────────────────────────────
+  { cat:'linux', diff:1, q:'What is the difference between the Linux kernel and a Linux distribution?',
+    a:'The <strong>kernel</strong> is the core OS component that manages hardware, processes, and memory. A <strong>distribution (distro)</strong> bundles the kernel with GNU tools, a package manager, init system, and other software. Examples: Ubuntu, RHEL, Alpine.' },
+
+  { cat:'linux', diff:1, q:'What does the command <code>chmod 755 file</code> do?',
+    a:'Sets permissions to <strong>rwxr-xr-x</strong>: owner can read/write/execute; group and others can read/execute. Commonly used for scripts and executables. Numeric: 7=rwx, 5=r-x.' },
+
+  { cat:'linux', diff:1, q:'What is the difference between <code>></code> and <code>>></code> in shell?',
+    a:'<code>></code> redirects stdout to a file, <strong>overwriting</strong> it if it exists. <code>>></code> <strong>appends</strong> to the file. E.g., <code>echo "hello" >> log.txt</code> adds a line without destroying existing content.' },
+
+  { cat:'linux', diff:2, q:'What does <code>2>&1</code> mean in a shell command?',
+    a:'Redirects <strong>stderr (fd 2)</strong> to <strong>stdout (fd 1)</strong>, merging both streams. Useful when you want to capture all output: <code>cmd > out.txt 2>&1</code>. Without it, error messages still print to the terminal.' },
+
+  { cat:'linux', diff:1, q:'What is the purpose of <code>/etc/fstab</code>?',
+    a:'Defines <strong>persistent filesystem mounts</strong>. Each entry specifies device, mount point, filesystem type, options, and dump/pass settings. Mounts defined here are applied automatically at boot.' },
+
+  { cat:'linux', diff:2, q:'How does <code>ps aux</code> differ from <code>top</code>?',
+    a:'<code>ps aux</code> gives a <strong>static snapshot</strong> of all running processes at the moment of execution. <code>top</code> provides a <strong>live, updating view</strong> with CPU/memory sorted by usage. <code>htop</code> is an improved interactive version of top.' },
+
+  { cat:'linux', diff:2, q:'What is a <code>symlink</code> and how do you create one?',
+    a:'A <strong>symbolic link</strong> is a pointer to another file or directory. Create with: <code>ln -s /original/path /link/path</code>. Unlike a hard link, a symlink can span filesystems and can point to directories. Removing the original breaks the symlink.' },
+
+  { cat:'linux', diff:2, q:'Explain the difference between <code>kill</code>, <code>kill -9</code>, and <code>killall</code>.',
+    a:'<code>kill PID</code> sends <strong>SIGTERM</strong> — asks the process to terminate gracefully. <code>kill -9 PID</code> sends <strong>SIGKILL</strong> — forces immediate termination, cannot be caught or ignored. <code>killall name</code> sends SIGTERM to all processes with that name.' },
+
+  { cat:'linux', diff:1, q:'What does <code>tail -f</code> do and when would you use it?',
+    a:'<code>tail -f file</code> streams the <strong>last lines of a file in real time</strong> as new content is appended. Used constantly for watching log files: <code>tail -f /var/log/nginx/access.log</code>. <code>-F</code> also handles log rotation.' },
+
+  { cat:'linux', diff:3, q:'What is the difference between a process and a thread in Linux?',
+    a:'A <strong>process</strong> is an independent program with its own memory space, PID, and file descriptors. A <strong>thread</strong> is a unit of execution within a process that shares the process\'s memory. Threads are lighter and communicate faster but can corrupt shared state.' },
+
+  { cat:'linux', diff:2, q:'What does <code>set -e</code> do in a bash script and why is it important?',
+    a:'<code>set -e</code> causes the script to <strong>exit immediately</strong> when any command returns a non-zero exit code. Without it, a failing command is silently ignored and the script continues. Combine with <code>set -o pipefail</code> to also catch pipe failures.' },
+
+  { cat:'linux', diff:2, q:'What is <code>cron</code> and what is the format of a cron expression?',
+    a:'<code>cron</code> is a time-based job scheduler. Format: <code>min hour day month weekday command</code>. Example: <code>0 3 * * 1 /backup.sh</code> = every Monday at 3:00 AM. Use <code>crontab -e</code> to edit your user\'s crontab.' },
+
+  { cat:'linux', diff:2, q:'How do you find all files modified in the last 24 hours in a directory?',
+    a:'<code>find /path -mtime -1 -type f</code>. The <code>-mtime -1</code> means modified less than 1 day ago. Use <code>-mmin -60</code> for minutes. Add <code>-name "*.log"</code> to filter by name.' },
+
+  { cat:'linux', diff:3, q:'What is an inode in Linux?',
+    a:'An <strong>inode</strong> is a data structure on the filesystem that stores metadata about a file: permissions, owner, timestamps, size, and pointers to data blocks — but <strong>not the filename</strong>. The filename-to-inode mapping is stored in the directory. Each file has exactly one inode; hard links share the same inode.' },
+
+  { cat:'linux', diff:2, q:'What is <code>systemctl</code> and how does it differ from <code>service</code>?',
+    a:'<code>systemctl</code> is the <strong>systemd</strong> control command. It manages services, sockets, targets, and more. <code>service</code> is the older SysV init wrapper. Key difference: <code>systemctl enable</code> configures <strong>boot persistence</strong>, while <code>service</code> cannot. Both can start/stop/restart services.' },
+
+  { cat:'linux', diff:3, q:'Explain the difference between soft and hard limits in <code>ulimit</code>.',
+    a:'<strong>Soft limit</strong> is the current enforced limit, changeable by the user up to the hard limit. <strong>Hard limit</strong> is the ceiling — only root can raise it. <code>ulimit -n 65536</code> sets open file descriptor limit. Important for high-traffic servers.' },
+
+  { cat:'linux', diff:1, q:'What does <code>df -h</code> show and how is it different from <code>du -sh</code>?',
+    a:'<code>df -h</code> shows <strong>disk space per filesystem</strong> (total, used, available, mount point). <code>du -sh dir/</code> shows <strong>disk usage of a specific directory</strong>. df reads filesystem metadata; du walks the directory tree and sums file sizes.' },
+
+  { cat:'linux', diff:2, q:'What is the purpose of the <code>/proc</code> filesystem?',
+    a:'<code>/proc</code> is a <strong>virtual filesystem</strong> exposing kernel and process data as files. <code>/proc/cpuinfo</code> = CPU details, <code>/proc/meminfo</code> = memory, <code>/proc/PID/</code> = per-process info. Nothing is stored on disk — it\'s generated on-the-fly by the kernel.' },
+
+  { cat:'linux', diff:2, q:'How would you check which process is listening on port 8080?',
+    a:'<code>ss -tulnp | grep 8080</code> — shows the socket, state, and owning process/PID. Alternatively: <code>lsof -i :8080</code>. <code>ss</code> is the modern replacement for <code>netstat</code> and is faster.' },
+
+  { cat:'linux', diff:3, q:'What is the purpose of <code>awk</code> and give a practical example.',
+    a:'<code>awk</code> is a text-processing tool that operates on fields and records. Example: <code>awk \'{print $1, $4}\' access.log</code> prints columns 1 and 4. <code>awk \'$9 == "404" {count++} END {print count}\' access.log</code> counts 404 responses.' },
+
+  // ── GIT ──────────────────────────────────────────────────────────
+  { cat:'git', diff:1, q:'What is the difference between <code>git fetch</code> and <code>git pull</code>?',
+    a:'<code>git fetch</code> downloads remote changes into remote-tracking branches but does <strong>not modify your working tree</strong>. <code>git pull</code> is fetch + merge (or fetch + rebase with <code>--rebase</code>). Fetch first to review changes before merging.' },
+
+  { cat:'git', diff:1, q:'What is the Git staging area (index) and why does it exist?',
+    a:'The staging area is a <strong>buffer between the working tree and the repository</strong>. It lets you craft commits precisely — stage only the changes you want, review with <code>git diff --staged</code>, then commit. This enables atomic, logical commits even when multiple files are edited.' },
+
+  { cat:'git', diff:2, q:'What is the difference between <code>git merge</code> and <code>git rebase</code>?',
+    a:'<code>git merge</code> preserves full history and adds a merge commit — non-destructive. <code>git rebase</code> replays commits on top of the target branch, creating a <strong>linear history</strong> but rewriting SHAs. Rule: rebase local branches; never rebase shared public branches.' },
+
+  { cat:'git', diff:2, q:'What does <code>git reset --hard HEAD~1</code> do?',
+    a:'<strong>Destructively</strong> removes the last commit AND discards all its changes from the working tree. <code>--soft</code> keeps changes staged. <code>--mixed</code> (default) keeps changes unstaged. Never use <code>--hard</code> on commits already pushed to a shared branch.' },
+
+  { cat:'git', diff:1, q:'What is a detached HEAD in Git?',
+    a:'When HEAD points <strong>directly to a commit</strong> instead of a branch name. Occurs when you checkout a specific SHA, tag, or remote branch directly. Commits made in this state can be lost if you switch away without creating a branch. Fix: <code>git checkout -b new-branch</code>.' },
+
+  { cat:'git', diff:2, q:'What is <code>git stash</code> and when would you use it?',
+    a:'<code>git stash</code> temporarily saves uncommitted changes off to the side and cleans the working tree. Use it to switch contexts without committing half-done work. <code>git stash pop</code> restores. <code>git stash list</code> shows multiple stashes. Stashes are local only.' },
+
+  { cat:'git', diff:2, q:'How does <code>git cherry-pick</code> work?',
+    a:'Applies a <strong>single commit from any branch</strong> onto the current branch, creating a new commit with the same changes but a different SHA. Use case: backporting a bug fix to a release branch without merging the entire feature branch.' },
+
+  { cat:'git', diff:3, q:'What is <code>git bisect</code> and how does it work?',
+    a:'Binary search through commit history to find which commit introduced a bug. <code>git bisect start</code>, mark a <code>bad</code> commit and a known <code>good</code> commit. Git checks out the midpoint; you test and mark good/bad. Repeats until it isolates the culprit in O(log n) steps.' },
+
+  { cat:'git', diff:2, q:'What is the difference between a lightweight and an annotated Git tag?',
+    a:'A <strong>lightweight tag</strong> is just a pointer to a commit — no metadata. An <strong>annotated tag</strong> (<code>git tag -a</code>) stores a full object: tagger name, date, message, and can be signed. Annotated tags are recommended for releases; lightweight for temporary bookmarks.' },
+
+  { cat:'git', diff:1, q:'What is <code>git revert</code> and how does it differ from <code>git reset</code>?',
+    a:'<code>git revert SHA</code> creates a <strong>new commit</strong> that undoes a previous commit — safe for shared branches as it preserves history. <code>git reset</code> moves the branch pointer backward, rewriting history. Use revert on public branches, reset only on local private branches.' },
+
+  { cat:'git', diff:3, q:'Explain Git\'s object model: what are the four object types?',
+    a:'<strong>Blob</strong> — stores file content. <strong>Tree</strong> — stores directory structure (pointers to blobs/trees). <strong>Commit</strong> — stores snapshot metadata and points to a tree. <strong>Tag</strong> — annotated tag pointing to a commit. All are content-addressed by SHA-1 hash.' },
+
+  { cat:'git', diff:2, q:'What is <code>git reflog</code> and when would you need it?',
+    a:'Reflog records every movement of HEAD and branch tips, including resets and rebases. It\'s the <strong>safety net for "lost" commits</strong>. Even after <code>git reset --hard</code>, you can recover by finding the SHA in reflog and creating a branch there.' },
+
+  { cat:'git', diff:2, q:'What is a fast-forward merge and when does it occur?',
+    a:'A fast-forward merge occurs when the <strong>target branch has no new commits</strong> since the feature branch diverged. Git simply moves the branch pointer forward — no merge commit needed. Prevents with <code>git merge --no-ff</code> to always create a merge commit for history clarity.' },
+
+  { cat:'git', diff:1, q:'What is <code>git blame</code> used for?',
+    a:'Shows <strong>who last modified each line</strong> of a file, along with the commit SHA, author, and timestamp. Useful for understanding why code exists and who to ask about it. Not about assigning blame — about tracing context and history.' },
+
+  { cat:'git', diff:3, q:'What is trunk-based development and how does it differ from Git Flow?',
+    a:'<strong>Trunk-based</strong>: all developers commit directly to main frequently (at least daily); feature flags hide incomplete work; requires strong CI. <strong>Git Flow</strong>: long-lived branches (develop, release/*, hotfix/*); more structure, heavier process. Trunk-based is preferred for CI/CD and high-velocity teams.' },
+
+  { cat:'git', diff:2, q:'What does <code>git push --force-with-lease</code> do?',
+    a:'A safer alternative to <code>--force</code>. It force-pushes <strong>only if the remote branch matches what you last fetched</strong>. If someone else pushed since your last fetch, it fails — preventing you from overwriting their work. Always prefer this over plain <code>--force</code>.' },
+
+  { cat:'git', diff:2, q:'How would you squash the last 3 commits into one?',
+    a:'<code>git rebase -i HEAD~3</code> opens an interactive editor. Change <code>pick</code> to <code>squash</code> (or <code>s</code>) on the last two commits, keeping the first as <code>pick</code>. Git combines all three and lets you write a new commit message. Alternatively: <code>git merge --squash</code> on a branch.' },
+
+  { cat:'git', diff:1, q:'What is the purpose of <code>.gitignore</code>?',
+    a:'Tells Git to <strong>never track</strong> matching files. Common entries: <code>node_modules/</code>, <code>.env</code>, <code>*.log</code>, <code>dist/</code>, <code>.DS_Store</code>. Uses glob patterns. <code>!</code> prefix negates a rule. Use <code>~/.gitignore_global</code> for machine-wide ignores.' },
+
+  { cat:'git', diff:3, q:'What is the difference between <code>git pull --rebase</code> and a regular <code>git pull</code>?',
+    a:'Regular pull does <strong>fetch + merge</strong>, potentially creating a merge commit in your history. <code>--rebase</code> does <strong>fetch + rebase</strong> — replays your local commits on top of the remote branch. Result: linear history without "Merge branch origin/main" noise. Often set as default with config.' },
+
+  { cat:'git', diff:2, q:'What is <code>git submodule</code> and when would you use it?',
+    a:'A way to <strong>embed one Git repository inside another</strong>, with a pinned commit reference. Used when projects depend on a specific version of a shared library. The parent repo tracks the submodule path and commit SHA. Alternatives: git subtree or package managers are often simpler.' },
+
+  // ── DOCKER ───────────────────────────────────────────────────────
+  { cat:'docker', diff:1, q:'What is the difference between a Docker image and a container?',
+    a:'An <strong>image</strong> is an immutable read-only template — like a class. A <strong>container</strong> is a running instance of an image — like an object. Containers add a writable layer on top of the image layers. Many containers can run from the same image simultaneously.' },
+
+  { cat:'docker', diff:1, q:'What is the purpose of <code>.dockerignore</code>?',
+    a:'Excludes files and directories from the <strong>build context</strong> sent to the Docker daemon. Without it, everything in the directory is sent. Always exclude: <code>node_modules/</code>, <code>.git/</code>, <code>.env</code>, <code>*.log</code>. Smaller build context = faster builds and no secrets leaking into images.' },
+
+  { cat:'docker', diff:2, q:'What is the difference between <code>CMD</code> and <code>ENTRYPOINT</code> in a Dockerfile?',
+    a:'<strong>ENTRYPOINT</strong> defines the fixed executable that always runs. <strong>CMD</strong> provides default arguments to ENTRYPOINT, or the default command if no ENTRYPOINT. CMD can be overridden at <code>docker run</code>. Combined: <code>ENTRYPOINT ["nginx"]</code> + <code>CMD ["-g", "daemon off;"]</code>.' },
+
+  { cat:'docker', diff:2, q:'What is a multi-stage Docker build and why use it?',
+    a:'Uses <strong>multiple FROM instructions</strong> in one Dockerfile. Early stages build/compile the app (with build tools). The final stage copies only the compiled artefacts into a minimal base image. Result: production images without compilers, test deps, or source code — much smaller and more secure.' },
+
+  { cat:'docker', diff:1, q:'What is the difference between a Docker volume and a bind mount?',
+    a:'<strong>Volume</strong>: managed by Docker, stored under <code>/var/lib/docker/volumes/</code>. Portable, survives container removal, recommended for production data. <strong>Bind mount</strong>: maps a specific host path into the container. Good for dev (live code reload), but host-path dependent and less portable.' },
+
+  { cat:'docker', diff:2, q:'What happens to data in a container when it is stopped vs when it is removed?',
+    a:'<strong>Stopped</strong>: container and its writable layer are preserved; data is intact; it can be restarted. <strong>Removed</strong> (<code>docker rm</code>): the writable layer is deleted permanently. Data in named volumes is unaffected by container removal — volumes must be explicitly deleted.' },
+
+  { cat:'docker', diff:3, q:'Explain the Docker layer caching mechanism and how to optimise for it.',
+    a:'Each Dockerfile instruction creates a layer. Docker caches layers; a cache miss on one instruction <strong>invalidates all subsequent layers</strong>. Optimise by: (1) ordering instructions by change frequency (least changed first), (2) copying <code>package.json</code> before <code>npm install</code> so installs are cached until dependencies change.' },
+
+  { cat:'docker', diff:2, q:'What is the Docker networking model? What are bridge, host, and overlay networks?',
+    a:'<strong>Bridge</strong>: default; private network on the host; containers resolve by name on user-defined bridges. <strong>Host</strong>: container shares host network stack; no NAT overhead; no isolation. <strong>None</strong>: no networking. <strong>Overlay</strong>: multi-host networking for Swarm/K8s, using VXLAN tunnels.' },
+
+  { cat:'docker', diff:1, q:'What is <code>docker compose down</code> vs <code>docker compose down -v</code>?',
+    a:'<code>docker compose down</code> stops and removes containers and networks. <code>-v</code> also <strong>removes named volumes</strong> defined in the compose file. Useful for a full clean reset. Without <code>-v</code>, data persists in volumes across down/up cycles.' },
+
+  { cat:'docker', diff:3, q:'What is the difference between <code>COPY</code> and <code>ADD</code> in a Dockerfile?',
+    a:'<code>COPY</code> copies files/directories from the build context. <code>ADD</code> does the same but also: (1) auto-extracts tar archives, (2) supports remote URLs. Best practice: always use <code>COPY</code> unless you specifically need ADD\'s extra features — it\'s more explicit and predictable.' },
+
+  { cat:'docker', diff:2, q:'What is Docker Swarm and how does it relate to Docker Compose?',
+    a:'Swarm is Docker\'s <strong>built-in container orchestration</strong> mode, turning multiple Docker hosts into a cluster. Docker Compose defines multi-container apps on a single host. Swarm uses the same Compose file format but deployed via <code>docker stack deploy</code> — it runs services across nodes.' },
+
+  { cat:'docker', diff:2, q:'What is the Swarm routing mesh?',
+    a:'Any node in the Swarm <strong>accepts traffic on a published port</strong> and routes it to a healthy task regardless of which node the task is running on. Uses IPVS internally. Enables load balancing without an external LB on any node IP.' },
+
+  { cat:'docker', diff:2, q:'What are Swarm Secrets and how do they differ from environment variables?',
+    a:'Swarm Secrets store sensitive data <strong>encrypted at rest and in transit</strong>, mounted into containers at <code>/run/secrets/name</code> as files. Environment variables are visible in <code>docker inspect</code> and can be leaked in logs. Secrets are only available to services explicitly granted access.' },
+
+  { cat:'docker', diff:3, q:'What is containerd and how does it relate to Docker?',
+    a:'<strong>containerd</strong> is a high-level container runtime that manages image pulling, container lifecycle, and storage. Docker daemon (dockerd) uses containerd under the hood. Kubernetes also uses containerd directly via CRI, bypassing Docker. runc is the low-level OCI runtime that containerd calls to actually start containers.' },
+
+  { cat:'docker', diff:2, q:'How does a Docker container differ from a virtual machine?',
+    a:'Containers share the <strong>host OS kernel</strong> and use namespaces/cgroups for isolation — lightweight, millisecond startup. VMs include a full guest OS (kernel + userland) on a hypervisor — heavier, seconds to boot. Containers are less isolated but far more resource-efficient. VMs provide stronger security boundaries.' },
+
+  { cat:'docker', diff:2, q:'What security best practices should you follow when building Docker images?',
+    a:'(1) Run as <strong>non-root user</strong> (USER 1000), (2) use minimal base images (alpine/distroless), (3) never bake secrets into images, (4) pin image versions, (5) scan images with tools like Trivy, (6) use multi-stage builds to exclude build tools, (7) keep images updated to get security patches.' },
+
+  { cat:'docker', diff:1, q:'How do you pass environment variables to a Docker container?',
+    a:'At run time: <code>docker run -e DB_HOST=localhost</code> or <code>--env-file .env</code>. In Compose: <code>environment:</code> or <code>env_file:</code> keys. For secrets: use Docker Secrets or a secrets manager — never bake sensitive values into images or commit <code>.env</code> files to Git.' },
+
+  { cat:'docker', diff:2, q:'What is the purpose of <code>EXPOSE</code> in a Dockerfile?',
+    a:'<code>EXPOSE</code> is <strong>documentation</strong> — it tells humans and tools which port the container listens on, but does NOT publish it. Publishing requires <code>-p host:container</code> at runtime. <code>docker run -P</code> auto-publishes all EXPOSE\'d ports to random host ports.' },
+
+  // ── KUBERNETES ───────────────────────────────────────────────────
+  { cat:'k8s', diff:1, q:'What is the difference between a Pod and a Deployment in Kubernetes?',
+    a:'A <strong>Pod</strong> is the smallest deployable unit — one or more containers. A <strong>Deployment</strong> manages a set of replica Pods, handling rolling updates, rollbacks, and self-healing. Pods managed by a Deployment are replaced if they crash; naked Pods are not.' },
+
+  { cat:'k8s', diff:1, q:'What is etcd and what happens if it goes down?',
+    a:'etcd is a distributed key-value store — the <strong>source of truth for all cluster state</strong>. If etcd goes down: the API Server cannot persist state, no new Pods can be scheduled, but <em>existing running Pods continue</em>. Recovery requires etcd backup restoration. Production: run 3 or 5 nodes.' },
+
+  { cat:'k8s', diff:2, q:'Explain the Kubernetes reconciliation loop.',
+    a:'Controllers continuously watch the <strong>desired state</strong> (spec in etcd) and <strong>actual state</strong> (running reality). When they diverge, the controller takes action to close the gap. E.g.: ReplicaSet wants 3 pods, sees 2 → creates one. This self-healing loop is fundamental to K8s.' },
+
+  { cat:'k8s', diff:1, q:'What is the difference between a ClusterIP, NodePort, and LoadBalancer Service?',
+    a:'<strong>ClusterIP</strong>: internal-only virtual IP; default type. <strong>NodePort</strong>: exposes on every node\'s IP at a static port (30000–32767); for external access without a cloud LB. <strong>LoadBalancer</strong>: provisions a cloud provider load balancer with a public IP; uses Cloud Controller Manager.' },
+
+  { cat:'k8s', diff:2, q:'What is a ConfigMap and when would you use a Secret instead?',
+    a:'<strong>ConfigMap</strong>: non-sensitive config (env vars, config files). <strong>Secret</strong>: sensitive data (passwords, tokens, certs) — stored base64 encoded, can be encrypted at rest with KMS. Use ConfigMap for app config, Secret for credentials. Both can be injected as env vars or mounted as files.' },
+
+  { cat:'k8s', diff:2, q:'What is the difference between a DaemonSet and a Deployment?',
+    a:'<strong>Deployment</strong>: runs N replicas distributed across the cluster. <strong>DaemonSet</strong>: ensures exactly <strong>one Pod per node</strong> (or matching nodes). Use DaemonSets for cluster-wide agents: log collectors (Fluentd), monitoring exporters (Node Exporter), network plugins (CNI), or security agents.' },
+
+  { cat:'k8s', diff:2, q:'What is a StatefulSet and when should you use it over a Deployment?',
+    a:'StatefulSet is for <strong>stateful applications</strong> requiring: (1) stable, unique Pod names (pod-0, pod-1), (2) stable network identity DNS names, (3) ordered, graceful deployment/scaling, (4) persistent storage per replica. Use for databases (Postgres, Redis) and message queues (Kafka). Deployments are for stateless apps.' },
+
+  { cat:'k8s', diff:3, q:'How does the Kubernetes Scheduler decide which node to place a Pod on?',
+    a:'Two phases: <strong>Filtering</strong> eliminates nodes that can\'t run the Pod (insufficient CPU/mem, taint violations, affinity rules). <strong>Scoring</strong> ranks remaining nodes (resource utilisation, spread constraints, image locality). The highest-scoring node wins. Plugins can extend both phases.' },
+
+  { cat:'k8s', diff:2, q:'What is the role of the kubelet?',
+    a:'The <strong>node agent</strong> running on every Worker Node. It watches the API Server for Pods assigned to its node, instructs the container runtime (containerd) to run them, executes liveness/readiness probes, mounts volumes, and reports Pod/node status back to the API Server continuously.' },
+
+  { cat:'k8s', diff:2, q:'What is a liveness probe vs a readiness probe?',
+    a:'<strong>Liveness probe</strong>: "Is the container still running correctly?" — if it fails, kubelet <strong>restarts</strong> the container. <strong>Readiness probe</strong>: "Is the container ready to serve traffic?" — if it fails, the Pod is <strong>removed from Service endpoints</strong> but not restarted. Use both for production deployments.' },
+
+  { cat:'k8s', diff:2, q:'What is a PersistentVolumeClaim (PVC) and how does binding work?',
+    a:'A PVC is a <strong>request for storage</strong> by a user/Pod. Kubernetes matches it to a compatible PersistentVolume (PV) based on storage class, access modes, and size. With dynamic provisioning, a StorageClass auto-creates a PV when a PVC is submitted — no manual PV provisioning needed.' },
+
+  { cat:'k8s', diff:1, q:'What is an Ingress and why is it useful?',
+    a:'An Ingress defines <strong>HTTP/HTTPS routing rules</strong>: route <code>example.com/api</code> to Service A, <code>example.com/web</code> to Service B. An Ingress Controller (NGINX, Traefik) enforces these rules. Benefits: consolidate many services behind one external IP, handle TLS termination, virtual hosting.' },
+
+  { cat:'k8s', diff:3, q:'What is a CNI plugin and what role does it play?',
+    a:'CNI (Container Network Interface) plugins implement the <strong>Pod networking model</strong>: assign each Pod a unique IP, configure routes so Pods on different nodes can communicate directly without NAT. K8s requires this flat network. Popular options: Calico (BGP), Cilium (eBPF), Flannel (VXLAN).' },
+
+  { cat:'k8s', diff:2, q:'What is RBAC in Kubernetes and what are its four main components?',
+    a:'Role-Based Access Control. <strong>Role/ClusterRole</strong>: define permissions (verbs on resources). <strong>RoleBinding/ClusterRoleBinding</strong>: grant a Role to subjects (users, groups, ServiceAccounts). Role = namespace-scoped. ClusterRole = cluster-wide. Principle of least privilege: grant minimum needed permissions.' },
+
+  { cat:'k8s', diff:2, q:'What is a ServiceAccount and why does every Pod need one?',
+    a:'A ServiceAccount is an <strong>identity for Pods</strong> running inside the cluster. Every Pod is automatically assigned one (default if not specified). The ServiceAccount\'s token is used to authenticate API requests from within the Pod. RBAC roles are bound to ServiceAccounts to control what the Pod can do.' },
+
+  { cat:'k8s', diff:3, q:'What is an Admission Controller and what does it do?',
+    a:'A plugin that <strong>intercepts API Server requests after auth/authz but before persistence</strong>. <strong>Mutating</strong> controllers can modify objects (e.g., inject sidecars, set defaults). <strong>Validating</strong> controllers can accept/reject objects (e.g., enforce image policies). Examples: PodSecurityAdmission, LimitRanger.' },
+
+  { cat:'k8s', diff:2, q:'What is a NetworkPolicy and what is the default behaviour without one?',
+    a:'Without NetworkPolicies: <strong>all Pods can communicate with all Pods</strong> (fully open). A NetworkPolicy is a Pod-level firewall defining allowed ingress/egress by Pod selector, namespace, or IP block. To restrict traffic you must explicitly create NetworkPolicies — K8s is permissive by default.' },
+
+  { cat:'k8s', diff:3, q:'What is the Horizontal Pod Autoscaler (HPA) and how does it work?',
+    a:'HPA <strong>automatically scales replica count</strong> in a Deployment/StatefulSet based on observed metrics. Default: CPU utilisation against a target percentage. Custom metrics (request rate, queue depth) via Metrics API. Control loop runs every 15s: if avg CPU > threshold → scale up; if consistently below → scale down after a cooldown.' },
+
+  { cat:'k8s', diff:1, q:'What is CoreDNS and what does it do in a Kubernetes cluster?',
+    a:'CoreDNS is the <strong>in-cluster DNS server</strong>. It auto-creates DNS records for every Service. Format: <code>svc.ns.svc.cluster.local</code>. Pods use it to resolve service names to ClusterIPs without knowing IP addresses. Enables service discovery purely by name — essential for microservices.' },
+
+  { cat:'k8s', diff:2, q:'What happens step by step when you run <code>kubectl apply -f deployment.yaml</code>?',
+    a:'(1) kubectl sends a REST request to the <strong>API Server</strong>. (2) API Server authenticates, authorises (RBAC), runs Admission Controllers, persists to etcd. (3) <strong>Deployment Controller</strong> creates a ReplicaSet + Pods. (4) <strong>Scheduler</strong> assigns nodes. (5) <strong>kubelet</strong> pulls image and starts containers. (6) CNI, kube-proxy, CoreDNS configure networking.' },
+
+  { cat:'k8s', diff:3, q:'What is the difference between <code>kubectl delete pod</code> and removing a node?',
+    a:'<code>kubectl delete pod</code>: the ReplicaSet Controller <strong>immediately creates a replacement Pod</strong> on any healthy node (reconciliation loop). Removing a node: the Node Controller detects it as NotReady after a timeout (default 5 min), evicts Pods, and the ReplicaSet Controller schedules them elsewhere. Cordoning a node prevents new scheduling without evicting existing Pods.' },
+];
+
+// ── State ─────────────────────────────────────────────────────────
+let currentFilter = 'all';
+let currentMode   = 'grid';
+let currentIndex  = 0;
+let mastered      = new Set();
+let order         = [];
+
+function filteredCards() {
+  if (currentFilter === 'all') return order;
+  return order.filter(i => CARDS[i].cat === currentFilter);
+}
+
+function render() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+
+  const visible = filteredCards();
+  visible.forEach((ci, pos) => {
+    const card = CARDS[ci];
+    const isFlipped  = document.querySelector(`.flash-card[data-idx="${ci}"]`)?.classList.contains('flipped') || false;
+    const isMastered = mastered.has(ci);
+
+    const el = document.createElement('div');
+    el.className = 'flash-card' + (isMastered ? ' mastered' : '');
+    if (currentMode === 'single') {
+      el.style.display = (pos === currentIndex) ? '' : 'none';
+    }
+    el.dataset.cat = card.cat;
+    el.dataset.idx = ci;
+    el.style.animationDelay = `${Math.min(pos * 0.03, 0.5)}s`;
+
+    const catLabels = { linux:'Linux', git:'Git', docker:'Docker', k8s:'Kubernetes' };
+    const diffDots = [1,2,3].map(d =>
+      `<span class="diff-dot ${d <= card.diff ? 'filled' : 'empty'}"></span>`).join('');
+    const diffLabel = ['','Easy','Medium','Hard'][card.diff];
+
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-front">
+          <div class="card-tag"><span class="dot"></span>${catLabels[card.cat]}</div>
+          <div class="card-q">${card.q}</div>
+          <div class="card-hint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 10l5 5 5-5"/>
+            </svg>
+            Click to reveal answer
+          </div>
+          <div class="difficulty">
+            ${diffDots}
+            <span class="diff-label">${diffLabel}</span>
+          </div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-back-tag">Answer — ${catLabels[card.cat]}</div>
+          <div class="card-a">${card.a}</div>
+          <div class="difficulty">
+            ${diffDots}
+            <span class="diff-label">${diffLabel}</span>
+          </div>
+        </div>
+      </div>
+      <button class="master-btn" title="Toggle mastered" onclick="event.stopPropagation(); toggleMaster(${ci})">
+        ${isMastered ? '★' : '☆'}
+      </button>
+    `;
+
+    if (isFlipped) el.classList.add('flipped');
+
+    el.addEventListener('click', () => {
+      el.classList.toggle('flipped');
+    });
+
+    grid.appendChild(el);
+  });
+
+  updateStats();
+  updateNav();
+}
+
+function updateStats() {
+  const visible = filteredCards();
+  document.getElementById('visibleCount').textContent  = visible.length;
+  document.getElementById('masteredCount').textContent = mastered.size;
+  document.getElementById('totalBadge').textContent    = `${CARDS.length} cards`;
+  const pct = mastered.size / CARDS.length * 100;
+  document.getElementById('progressBar').style.width   = pct + '%';
+}
+
+function updateNav() {
+  const ctrl = document.getElementById('navControls');
+  const visible = filteredCards();
+  if (currentMode === 'single') {
+    ctrl.classList.add('visible');
+    document.getElementById('navCounter').textContent = `${currentIndex + 1} / ${visible.length}`;
+    document.getElementById('prevBtn').disabled = currentIndex === 0;
+    document.getElementById('nextBtn').disabled = currentIndex === visible.length - 1;
+  } else {
+    ctrl.classList.remove('visible');
+  }
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  currentIndex = 0;
+  const grid = document.getElementById('cardsGrid');
+  document.getElementById('modeGrid').classList.toggle('active', mode === 'grid');
+  document.getElementById('modeSingle').classList.toggle('active', mode === 'single');
+  grid.classList.toggle('single-mode', mode === 'single');
+  render();
+}
+
+function navigate(dir) {
+  const visible = filteredCards();
+  currentIndex = Math.max(0, Math.min(visible.length - 1, currentIndex + dir));
+  // Just update visibility instead of full re-render
+  document.querySelectorAll('.flash-card').forEach((el, i) => {
+    el.style.display = (i === currentIndex) ? '' : 'none';
+  });
+  updateNav();
+}
+
+function shuffleCards() {
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  currentIndex = 0;
+  render();
+}
+
+function flipAllOpen() {
+  document.querySelectorAll('.flash-card:not(.hidden)').forEach(el => el.classList.add('flipped'));
+}
+
+function resetAll() {
+  document.querySelectorAll('.flash-card').forEach(el => el.classList.remove('flipped'));
+  currentIndex = 0;
+  updateNav();
+}
+
+function toggleMaster(idx) {
+  if (mastered.has(idx)) mastered.delete(idx);
+  else mastered.add(idx);
+  // Update just the star and mastered class
+  const el = document.querySelector(`.flash-card[data-idx="${idx}"]`);
+  if (el) {
+    el.classList.toggle('mastered', mastered.has(idx));
+    el.querySelector('.master-btn').textContent = mastered.has(idx) ? '★' : '☆';
+  }
+  updateStats();
+}
+
+// Filter buttons
+document.getElementById('filterBar').addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.cat;
+  currentIndex = 0;
+  render();
+});
+
+// Keyboard controls
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (currentMode === 'single') {
+      const visible = filteredCards();
+      const idx = visible[currentIndex];
+      const el = document.querySelector(`.flash-card[data-idx="${idx}"]`);
+      if (el) el.classList.toggle('flipped');
+    }
+  }
+  if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); navigate(1); }
+  if (e.code === 'ArrowLeft'  || e.code === 'ArrowUp')   { e.preventDefault(); navigate(-1); }
+  if (e.code === 'KeyM' && currentMode === 'single') {
+    const visible = filteredCards();
+    if (visible[currentIndex] !== undefined) toggleMaster(visible[currentIndex]);
+  }
+});
+
+// Init
+order = Array.from({length: CARDS.length}, (_, i) => i);
+render();
+</script>
+</body>
+</html>
